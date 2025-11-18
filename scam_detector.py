@@ -2,12 +2,13 @@ import pandas as pd
 import numpy as np
 import joblib
 import re
-from scipy.sparse import hstack
+from scipy.sparse import hstack, csr_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
+from sentence_transformers import SentenceTransformer
 
 DATA_FILEPATH = 'emails.csv'
 TEXT_COLUMN = 'text'
@@ -19,6 +20,8 @@ VECTORIZER_PATH = 'tfidf_vectorizer.joblib'
 SCALER_PATH = 'metadata_scaler.joblib' 
 METADATA_FEATURES = ['percent_caps', 'percent_punct', 'link_count', 'word_count']
 
+SBERT_MODEL_NAME = "all-MiniLM-L6-v2"  # good, small, fast SBERT model
+SBERT_SCALER_PATH = "sbert_scaler.joblib"
 
 def compute_metadata_features(texts):
     features = []
@@ -98,10 +101,32 @@ def train_model():
     X_train_meta_scaled = scaler.fit_transform(X_train_meta)
     X_test_meta_scaled = scaler.transform(X_test_meta)
 
-    # combine feature matrices
+    # SBERT embeddings
+    print("Loading SBERT model and encoding emails...")
+    sbert_model = SentenceTransformer(SBERT_MODEL_NAME)
+
+    # SBERT returns dense numpy arrays
+    X_train_sbert = sbert_model.encode(X_train.tolist(), show_progress_bar=True)
+    X_test_sbert = sbert_model.encode(X_test.tolist(), show_progress_bar=True)
+
+    print("Scaling SBERT embeddings...")
+    sbert_scaler = StandardScaler()
+    X_train_sbert_scaled = sbert_scaler.fit_transform(X_train_sbert)
+    X_test_sbert_scaled = sbert_scaler.transform(X_test_sbert)
+
+    # combine all features
     # convert to tocsr format for compatibility
-    X_train_combined = hstack([X_train_tfidf, X_train_meta_scaled]).tocsr()
-    X_test_combined = hstack([X_test_tfidf, X_test_meta_scaled]).tocsr()
+    X_train_combined = hstack([
+        X_train_tfidf,
+        X_train_meta_scaled,
+        csr_matrix(X_train_sbert_scaled)
+    ]).tocsr()
+
+    X_test_combined = hstack([
+        X_test_tfidf,
+        X_test_meta_scaled,
+        csr_matrix(X_test_sbert_scaled)
+    ]).tocsr()
 
     # train the model
     print("Training Logistic Regression model...")
@@ -120,11 +145,14 @@ def train_model():
     joblib.dump(model, MODEL_PATH)
     joblib.dump(vectorizer, VECTORIZER_PATH)
     joblib.dump(scaler, SCALER_PATH)
+    joblib.dump(sbert_scaler, SBERT_SCALER_PATH)
     
     print(f"\nModel saved to {MODEL_PATH}")
     print(f"Vectorizer saved to {VECTORIZER_PATH}")
     print(f"Scaler saved to {SCALER_PATH}")
+    print(f"SBERT scaler saved to {SBERT_SCALER_PATH}")
 
+# tf-idf
 def get_scam_indicators(email_text, model, vectorizer):
     feature_names = vectorizer.get_feature_names_out()
     coefficients = model.coef_[0]
@@ -144,15 +172,20 @@ def get_scam_indicators(email_text, model, vectorizer):
     sorted_scam_words = sorted(found_words.items(), key=lambda item: item[1], reverse=True)
     return sorted_scam_words
 
+# tf-idf and SBERT
 def predict_email(email_text):
     try:
         model = joblib.load(MODEL_PATH)
         vectorizer = joblib.load(VECTORIZER_PATH)
         scaler = joblib.load(SCALER_PATH)
+        sbert_scaler = joblib.load(SBERT_SCALER_PATH)
     except FileNotFoundError:
         print("Error: Model/vectorizer/scaler files not found.")
         print(f"Please run `train_model()` first.")
         return None
+    
+    if not isinstance(email_text, str):
+        email_text = ""
 
     # transform text using loaded vectorizer
     text_tfidf = vectorizer.transform([email_text])
@@ -161,9 +194,18 @@ def predict_email(email_text):
     text_meta = compute_metadata_features(pd.Series([email_text]))
     text_meta_scaled = scaler.transform(text_meta)
     
+    # sbert
+    sbert_model = SentenceTransformer(SBERT_MODEL_NAME)
+    text_sbert = sbert_model.encode([email_text])
+    text_sbert_scaled = sbert_scaler.transform(text_sbert)
+
     # combine features
-    text_combined = hstack([text_tfidf, text_meta_scaled]).tocsr()
-    
+    text_combined = hstack([
+        text_tfidf,
+        text_meta_scaled,
+        csr_matrix(text_sbert_scaled)
+    ]).tocsr()
+
     # get prediction and probabilities
     prediction = model.predict(text_combined)[0]
     probabilities = model.predict_proba(text_combined)[0]

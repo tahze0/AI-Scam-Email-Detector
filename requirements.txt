@@ -5,3 +5,4 @@ lime
 transformers
 torch
 datasets
+sentence-transformers
