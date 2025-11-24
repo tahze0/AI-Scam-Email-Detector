@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { predictEmail } from "./api";
+import "./App.css"; 
 
 function App() {
   const [text, setText] = useState("");
@@ -34,75 +35,87 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "2rem" }}>
-      <h1>AI Scam Email Detector</h1>
-      <p>Paste an email below and click Analyze to see if it looks like a scam.</p>
+    <div className="app-container">
+      <div className="card">
+        <div className="header">
+          <h1>AI Scam Email Detector</h1>
+          <p>Paste an email below to check for phishing indicators</p>
+        </div>
 
-      <textarea
-        style={{ width: "100%", height: "200px", marginTop: "1rem" }}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Paste email text here..."
-      />
+        <textarea
+          className="email-input"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Subject: Urgent Request..."
+        />
 
-      <div style={{ marginTop: "1rem" }}>
-        <button onClick={handleAnalyze} disabled={loading}>
+        <button 
+          className="analyze-btn" 
+          onClick={handleAnalyze} 
+          disabled={loading}
+        >
           {loading ? "Analyzing..." : "Analyze Email"}
         </button>
-      </div>
 
-      {error && (
-        <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>
-      )}
+        {error && (
+          <div className="error-msg">{error}</div>
+        )}
 
-      {result && !error && (
-        <div
-          style={{
-            marginTop: "2rem",
-            padding: "1.5rem",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            background: result.is_scam ? "#fff5f5" : "#f0fff4"
-          }}
-        >
-          <h2>Result: <span style={{ color: result.is_scam ? "red" : "green" }}>{result.prediction}</span></h2>
-          <p>Combined Confidence: <strong>{result.confidence_percent}</strong></p>
-
-          <hr style={{ margin: "1.5rem 0", opacity: 0.3 }} />
-
-          {/*TF-IDF vs SBERT Breakdown */}
-          <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
-            
-            {/* TF-IDF Model */}
-            <div style={{ flex: 1 }}>
-              <strong>Keyword Analysis (TF-IDF)</strong>
-              <div style={{ background: "#ddd", height: "10px", borderRadius: "5px", marginTop: "5px" }}>
-                <div style={{ 
-                    width: result.breakdown.tfidf_score, 
-                    background: "#2196f3", height: "100%", borderRadius: "5px" 
-                }}></div>
+        {result && !error && (
+          <div className={`result-container ${result.is_scam ? "scam" : "safe"}`}>
+            <div className="result-header">
+              <div>
+                <span style={{color: '#a1a1aa', fontSize: '0.9rem'}}>Prediction</span>
+                <div className="result-badge">{result.prediction}</div>
               </div>
-              <small>{result.breakdown.tfidf_score} Suspicious</small>
+              <div style={{textAlign: 'right'}}>
+                <span style={{color: '#a1a1aa', fontSize: '0.9rem'}}>Combined Confidence</span>
+                <div style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#fff'}}>
+                  {result.confidence_percent}
+                </div>
+              </div>
             </div>
 
-            {/* SBERT Model */}
-            <div style={{ flex: 1 }}>
-              <strong>Context Analysis (SBERT)</strong>
-              <div style={{ background: "#ddd", height: "10px", borderRadius: "5px", marginTop: "5px" }}>
-                <div style={{ 
-                    width: result.breakdown.sbert_score, 
-                    background: "#9c27b0", height: "100%", borderRadius: "5px" 
-                }}></div>
+            <hr style={{ borderColor: '#3f3f46', margin: "1.5rem 0" }} />
+
+            {/* Breakdown Section */}
+            <div className="breakdown-grid">
+              {/* TF-IDF Bar */}
+              <div>
+                <span className="progress-label">Keyword Analysis (TF-IDF)</span>
+                <div className="progress-bg">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: result.breakdown.tfidf_score, backgroundColor: "#3b82f6" }}
+                  ></div>
+                </div>
+                <span className="meta-text">{result.breakdown.tfidf_score} Suspicious</span>
               </div>
-              <small>{result.breakdown.sbert_score} Suspicious</small>
+
+              {/* SBERT Bar */}
+              <div>
+                <span className="progress-label">Context Analysis (SBERT)</span>
+                <div className="progress-bg">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: result.breakdown.sbert_score, backgroundColor: "#a855f7" }}
+                  ></div>
+                </div>
+                <span className="meta-text">{result.breakdown.sbert_score} Suspicious</span>
+              </div>
             </div>
+
+            {result.flagged_words && result.flagged_words.length > 0 && (
+              <div style={{marginTop: '1.5rem'}}>
+                <span className="progress-label" style={{color: '#ef4444'}}>🚩 Flagged words: </span>
+                <p style={{ marginTop: "0.25rem", color: "#d4d4d8" }}>
+                  {result.flagged_words.join(", ")}
+                </p>
+              </div>
+            )}
           </div>
-
-          {result.flagged_words && result.flagged_words.length > 0 && (
-            <p>🚩 Flagged words: {result.flagged_words.join(", ")}</p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

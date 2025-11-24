@@ -1,42 +1,223 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #e5e7eb; /* Light grey text */
+  background-color: #131314; 
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: block;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #131314;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Main container */
+.app-container {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+/* dark card effect */
+.card {
+  background-color: #1c1c1e; 
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid #2d2d30; 
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.header p {
+  color: #a1a1aa; 
+}
+
+/* Dark Text Area Input */
+.email-input {
+  width: 100%;
+  height: 200px;
+  padding: 1rem;
+  background-color: #131314; /* Match body bg for "cutout" look */
+  color: #e5e7eb;
+  border: 2px solid #2d2d30;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.email-input::placeholder {
+  color: #52525b;
+}
+
+/* Button Styling */
+.analyze-btn {
+  background-color: #2563eb;
+  color: white;
+  width: 100%;
+  padding: 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.analyze-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+}
+
+.analyze-btn:disabled {
+  background-color: #1e293b;
+  color: #64748b;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* error message */
+.error-msg {
+  background-color: rgba(127, 29, 29, 0.2);
+  color: #f87171;
+  border: 1px solid #7f1d1d;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Results Box - Dark Mode Versions */
+.result-container {
+  margin-top: 2rem;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-container.scam {
+  background-color: rgba(220, 38, 38, 0.05); /* Very subtle red tint */
+  border-color: #7f1d1d;
+}
+
+.result-container.safe {
+  background-color: rgba(22, 163, 74, 0.05); /* Very subtle green tint */
+  border-color: #14532d;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.result-badge {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scam .result-badge { 
+  color: #ef4444; 
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.3); /* glow effect */
+}
+.safe .result-badge { 
+  color: #4ade80; 
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.3); /* glow effect */
+}
+
+/* Progress Bars Section */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.progress-label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #d4d4d8;
+}
+
+.progress-bg {
+  background-color: #27272a; 
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meta-text {
+  font-size: 0.875rem;
+  color: #71717a;
+  margin-top: 8px;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
-  to {
-    transform: rotate(360deg);
+  
+  .card {
+    padding: 1.5rem;
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
