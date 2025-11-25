@@ -156,7 +156,8 @@ def train_model():
     joblib.dump(artifacts, MODEL_ARTIFACTS_PATH)
     print(f"\n Training Complete. Saved to {MODEL_ARTIFACTS_PATH}")
 
-# tf-idf
+# Extract suspicious keywords (TF-IDF only)
+# We use TF-IDF for this because SBERT can't easily show us which individual word triggered the alarm.
 def get_scam_indicators(email_text, model, vectorizer):
     feature_names = vectorizer.get_feature_names_out()
     coefficients = model.coef_[0]
@@ -176,7 +177,7 @@ def get_scam_indicators(email_text, model, vectorizer):
     sorted_scam_words = sorted(found_words.items(), key=lambda item: item[1], reverse=True)
     return sorted_scam_words
 
-# tf-idf and SBERT
+# Main Prediction Logic: Hybrid Model (TF-IDF + SBERT) / 2
 def predict_email(email_text, artifacts=None):
     # load artifacts (fixes speed issues)
     if artifacts is None:
